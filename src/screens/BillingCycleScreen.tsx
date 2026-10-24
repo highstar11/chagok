@@ -11,7 +11,7 @@ const ITEM_H = 48;
 const VISIBLE = 5; // 가운데 선택 + 위아래 2칸
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 
-// 1~31일을 고르는 휠 피커. 가운데에 걸린 값이 선택값이다.
+// 1~31일을 고르는 휠 피커. 가운데에 걸린 값이 선택 값
 function DayWheel({ initial, onChange }: { initial: number; onChange: (day: number) => void }) {
   const y = useRef(new Animated.Value((initial - 1) * ITEM_H)).current;
   const ref = useRef<any>(null);

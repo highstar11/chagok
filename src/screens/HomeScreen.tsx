@@ -17,7 +17,7 @@ import { useSettings } from '../settings/SettingsContext';
 import { formatMonthDay, getCycleRange } from '../utils/cycle';
 import { remainingMoney, won } from '../utils/budget';
 import { WEEKDAYS, addDays, isSameDay, startOfDay } from '../utils/date';
-
+import {MyCard} from "../components/MyCard";
 const TIER_SAFE = '#10B981';
 const TIER_CAUTION = '#F97316';
 const TIER_WARN = '#e84113';
@@ -325,6 +325,7 @@ export function HomeScreen() {
         </Header>
       </BlurHeader>
 
+
       <AddFab collapsed={fabCollapsed} onPress={openAdd} bottom={insets.bottom + FAB_BOTTOM} />
 
       <DateSheet
@@ -475,53 +476,53 @@ const EmptyText = styled.Text`
   color: ${({ theme }) => theme.colors.subText};
 `;
 
-// const SectionTop = styled.View`
-//   flex-direction: row;
-//   align-items: baseline;
-//   justify-content: space-between;
-// `;
-// const SectionTitle = styled.Text`
-//   font-size: 16px;
-//   font-weight: 800;
-//   color: ${({ theme }) => theme.colors.text};
-// `;
-// const SectionHint = styled.Text`
-//   font-size: 11px;
-//   color: ${({ theme }) => theme.colors.subText};
-// `;
-// const ChartWrap = styled.View`
-//   margin-top: 14px;
-// `;
-// const LimitLine = styled.View`
-//   position: absolute;
-//   left: 0;
-//   right: 0;
-// `;
-// const LimitLabel = styled.Text`
-//   position: absolute;
-//   right: 0;
-//   bottom: 3px;
-//   font-size: 10px;
-//   color: ${({ theme }) => theme.colors.subText};
-// `;
-// const ColRow = styled.View`
-//   flex-direction: row;
-// `;
-// const ColInner = styled.View`
-//   align-items: center;
-//   border-radius: 12px;
-// `;
-// const StackBox = styled.View`
-//   justify-content: flex-end;
-//   align-items: center;
-// `;
-// const Block = styled.View`
-//   width: 14px;
-//   margin-top: 2px;
-//   border-radius: 4px;
-// `;
-// const DayLabel = styled.Text`
-//   height: ${LABEL_H}px;
-//   line-height: ${LABEL_H}px;
-//   font-size: 10px;
-// `;
+const SectionTop = styled.View`
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+`;
+const SectionTitle = styled.Text`
+  font-size: 16px;
+  font-weight: 800;
+  color: ${({ theme }) => theme.colors.text};
+`;
+const SectionHint = styled.Text`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.subText};
+`;
+const ChartWrap = styled.View`
+  margin-top: 14px;
+`;
+const LimitLine = styled.View`
+  position: absolute;
+  left: 0;
+  right: 0;
+`;
+const LimitLabel = styled.Text`
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  font-size: 10px;
+  color: ${({ theme }) => theme.colors.subText};
+`;
+const ColRow = styled.View`
+  flex-direction: row;
+`;
+const ColInner = styled.View`
+  align-items: center;
+  border-radius: 12px;
+`;
+const StackBox = styled.View`
+  justify-content: flex-end;
+  align-items: center;
+`;
+const Block = styled.View`
+  width: 14px;
+  margin-top: 2px;
+  border-radius: 4px;
+`;
+const DayLabel = styled.Text`
+  height: ${LABEL_H}px;
+  line-height: ${LABEL_H}px;
+  font-size: 10px;
+`;

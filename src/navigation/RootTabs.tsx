@@ -37,7 +37,9 @@ export function RootTabs() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={Tabs} />
-      <Stack.Screen name="AddExpense" component={AddExpenseScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="AddExpense" component={AddExpenseScreen} options={{ presentation: 'fullScreenModal', headerShown: false,  contentStyle: { backgroundColor: "#FFFFFF" },
+    gestureEnabled: false, // 스와이프로 닫히는 걸 막고 싶을 때
+     }} />
     </Stack.Navigator>
   );
 }
