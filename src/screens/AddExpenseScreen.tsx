@@ -4,9 +4,11 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  PlatformColor,
   Pressable,
   ScrollView,
-  PlatformColor,
+  TextInput,
+  View,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -20,16 +22,16 @@ import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass
 
 const MAX_AMOUNT = 99_999_999;
 const SIDE = 24;
+const FILL = 'rgba(120,120,128,0.16)'; // iOS systemFill: 라이트/다크 모두 자연스럽다
 const QUICK_ADD = [
-  { label: '+1,000', value: 1_000 },
-  { label: '+5,000', value: 5_000 },
+  { label: '+1천', value: 1_000 },
+  { label: '+5천', value: 5_000 },
   { label: '+1만', value: 10_000 },
   { label: '+5만', value: 50_000 },
 ];
 
 const comma = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-// 12500 -> "1만 2,500원"
 const readable = (n: number) => {
   const man = Math.floor(n / 10000);
   const rest = n % 10000;
@@ -45,8 +47,9 @@ export function AddExpenseScreen() {
   const [name, setName] = useState('');
   const [category, setCategory] = useState<CategoryId | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [nameFocused, setNameFocused] = useState(false);
 
-  const shake = useRef(new Animated.Value(0)).current;
+const amountRef = useRef<React.ComponentRef<typeof TextInput>>(null);  const shake = useRef(new Animated.Value(0)).current;
   const manualCategory = useRef(false); // 직접 고른 카테고리는 자동 추천이 덮어쓰지 않는다
 
   // 키보드가 올라와 있으면 홈 인디케이터 여백이 필요 없다
@@ -117,121 +120,137 @@ export function AddExpenseScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Container
         style={{
-          paddingTop: insets.top + 24,
+          paddingTop: insets.top + 8,
           paddingBottom: keyboardOpen ? 12 : insets.bottom + 12,
         }}
       >
         <Header>
           <HeaderTitle style={{ color: colors.text }}>지출 추가</HeaderTitle>
-          <HeaderSpacer />
-          <LiquidGlassView
-            interactive
-            effect="regular"
-            style={[
-                { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-                !isLiquidGlassSupported && { backgroundColor: colors.track },]}> 
-            <Pressable 
-                onPress={() => navigation.goBack()} 
-                hitSlop={12} 
-                accessibilityRole="button" 
+          <HeaderSide />
+          <HeaderSide>
+            <LiquidGlassView
+              interactive
+              effect="regular"
+              style={[
+                { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+                !isLiquidGlassSupported && { backgroundColor: FILL },
+              ]}
+            >
+              <Pressable
+                onPress={() => navigation.goBack()}
+                hitSlop={12}
+                accessibilityRole="button"
                 accessibilityLabel="닫기"
-                style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}>
-                <CloseText                
-                    style={{ color: isLiquidGlassSupported ? PlatformColor('labelColor') : colors.subText }}>
-                    ✕ 
+                style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <CloseText style={{ color: isLiquidGlassSupported ? PlatformColor('labelColor') : colors.subText }}>
+                  ✕
                 </CloseText>
-            </Pressable>
-        </LiquidGlassView>
+              </Pressable>
+            </LiquidGlassView>
+          </HeaderSide>
         </Header>
 
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingTop: 32, paddingBottom: 16 }}
+          contentContainerStyle={{ paddingTop: 36 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <FieldLabel style={{ color: colors.subText }}>금액</FieldLabel>
-          <Animated.View
-            style={{
-              transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-8, 8] }) }],
-            }}
-          >
-            <AmountRow>
-              <AmountInput
-                value={amount === 0 ? '' : comma(amount)}
-                onChangeText={onChangeAmount}
-                placeholder="0"
-                placeholderTextColor={colors.subText}
-                keyboardType="number-pad"
-                autoFocus
-                maxLength={11}
-                contextMenuHidden
-                selectionColor={colors.accent}
-                accessibilityLabel="금액 입력"
-                style={{ color: colors.text }}
-              />
-              <AmountUnit style={{ color: amount > 0 ? colors.text : colors.subText }}>원</AmountUnit>
-            </AmountRow>
-          </Animated.View>
-          <Hint numberOfLines={1} style={{ color: colors.subText }}>
-            {hint}
-          </Hint>
+          {/* 금액: 화면의 주인공. 숨겨진 입력창 + 큰 숫자 표시 */}
+          <Pressable onPress={() => amountRef.current?.focus()} accessible={false}>
+            <Animated.View
+              style={{
+                alignItems: 'center',
+                transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-8, 8] }) }],
+              }}
+            >
+              <AmountRow>
+                <AmountText
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  style={{ color: amount > 0 ? colors.text : colors.subText }}
+                >
+                  {comma(amount)}
+                </AmountText>
+                <AmountUnit style={{ color: amount > 0 ? colors.text : colors.subText }}>원</AmountUnit>
+              </AmountRow>
+            </Animated.View>
+          </Pressable>
+          <TextInput
+            ref={amountRef}
+            value={amount === 0 ? '' : comma(amount)}
+            onChangeText={onChangeAmount}
+            keyboardType="number-pad"
+            autoFocus
+            caretHidden
+            contextMenuHidden
+            accessibilityLabel="금액 입력"
+            style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
+          />
 
-          <QuickRow
-            horizontal
-            keyboardShouldPersistTaps="handled"
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8 }}
-          >
+          {/* 내용 + 카테고리를 하나의 카드로 묶는다 */}
+          <Card style={{ backgroundColor: colors.track }}>
+            <NameInput
+              value={name}
+              onChangeText={setName}
+              onFocus={() => setNameFocused(true)}
+              onBlur={() => setNameFocused(false)}
+              placeholder="어디에 쓰셨나요?"
+              placeholderTextColor={colors.subText}
+              returnKeyType="done"
+              maxLength={30}
+              autoCorrect={false}
+              selectionColor={colors.accent}
+              accessibilityLabel="지출 내용"
+              style={{ color: colors.text }}
+            />
+            <Divider style={{ backgroundColor: colors.subText }} />
+            <ScrollView
+              horizontal
+              keyboardShouldPersistTaps="handled"
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, padding: 14 }}
+            >
+              {CATEGORIES.map((c) => {
+                const selected = category === c.id;
+                return (
+                  <Pressable
+                    key={c.id}
+                    onPress={() => pickCategory(c.id)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`${c.label} 카테고리`}
+                  >
+                    <Chip style={{ backgroundColor: selected ? colors.accent : FILL }}>
+                      <ChipText style={{ color: selected ? '#FFFFFF' : colors.text }}>{c.label}</ChipText>
+                    </Chip>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Card>
+        </ScrollView>
+
+        {/* 하단: 금액 빠른 추가(금액 입력 중에만) + 저장
+        {!nameFocused && (
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
             {QUICK_ADD.map((q) => (
               <Pressable
                 key={q.label}
+                style={{ flex: 1 }}
                 onPress={() => updateAmount(amount + q.value)}
                 accessibilityRole="button"
                 accessibilityLabel={`${comma(q.value)}원 더하기`}
               >
-                <Chip style={{ backgroundColor: colors.track }}>
+                <QuickChip style={{ backgroundColor: FILL }}>
                   <ChipText style={{ color: colors.text }}>{q.label}</ChipText>
-                </Chip>
+                </QuickChip>
               </Pressable>
             ))}
-          </QuickRow>
-
-          <FieldLabel style={{ color: colors.subText, marginTop: 36 }}>내용</FieldLabel>
-          <NameInput
-            value={name}
-            onChangeText={setName}
-            placeholder="예: 배달의민족, 치킨"
-            placeholderTextColor={colors.subText}
-            returnKeyType="done"
-            maxLength={30}
-            autoCorrect={false}
-            selectionColor={colors.accent}
-            accessibilityLabel="지출 내용"
-            style={{ backgroundColor: colors.track, color: colors.text }}
-          />
-
-          <FieldLabel style={{ color: colors.subText, marginTop: 36 }}>카테고리</FieldLabel>
-          <Grid>
-            {CATEGORIES.map((c) => {
-              const selected = category === c.id;
-              return (
-                <Pressable
-                  key={c.id}
-                  onPress={() => pickCategory(c.id)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={`${c.label} 카테고리`}
-                >
-                  <Chip style={{ backgroundColor: selected ? colors.accent : colors.track }}>
-                    <ChipText style={{ color: selected ? '#FFFFFF' : colors.text }}>{c.label}</ChipText>
-                  </Chip>
-                </Pressable>
-              );
-            })}
-          </Grid>
-        </ScrollView>
+          </View>
+        )} */}
 
         <Pressable
           disabled={!canSave}
@@ -241,7 +260,7 @@ export function AddExpenseScreen() {
           accessibilityState={{ disabled: !canSave }}
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
         >
-          <DoneBtn style={{ backgroundColor: canSave ? colors.accent : colors.track }}>
+          <DoneBtn style={{ backgroundColor: canSave ? colors.accent : FILL }}>
             <DoneText style={{ color: canSave ? '#FFFFFF' : colors.subText }}>저장</DoneText>
           </DoneBtn>
         </Pressable>
@@ -253,90 +272,81 @@ export function AddExpenseScreen() {
 const Container = styled.View`
   flex: 1;
   padding: 0 ${SIDE}px;
-  background-color: "#FFFFFF";
 `;
 const Header = styled.View`
-  height: 48px;
+  height: 44px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 `;
-const HeaderAction = styled.Text`
-  font-size: 16px;
-  font-weight: 500;
+const HeaderSide = styled.View`
+  width: 36px;
+  align-items: flex-end;
 `;
 const HeaderTitle = styled.Text`
   font-size: 17px;
   font-weight: 600;
 `;
-const HeaderSpacer = styled.View`
-  width: 32px;
-`;
-const CloseText = styled.Text`  
-    font-size: 14px;
-    font-weight: 600;
-`;
-const FieldLabel = styled.Text`
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 500;
+const CloseText = styled.Text`
+  font-size: 16px;
+  font-weight: 700;
 `;
 const AmountRow = styled.View`
   flex-direction: row;
-  align-items: center;
+  align-items: baseline;
+  justify-content: center;
+  max-width: 100%;
 `;
-const AmountInput = styled.TextInput`
-  flex: 1;
-  height: 48px;
-  padding: 0;
-  font-size: 34px;
-  font-weight: 700;
+const AmountText = styled.Text`
+  flex-shrink: 1;
+  font-size: 48px;
+  font-weight: 500;
+  letter-spacing: -1.2px;
 `;
 const AmountUnit = styled.Text`
-  margin-left: 4px;
-  font-size: 22px;
-  font-weight: 600;
+  margin-left: 8px;
+  font-size: 24px;
+  font-weight: 700;
 `;
-const Hint = styled.Text`
-  min-height: 20px;
-  margin-top: 4px;
-  font-size: 14px;
-  font-weight: 500;
-`;
-const QuickRow = styled.ScrollView`
-  flex-grow: 0;
-  margin-top: 16px;
+const Card = styled.View`
+  margin-top: 56px;
+  border-radius: 20px;
+  overflow: hidden;
 `;
 const NameInput = styled.TextInput`
-  height: 52px;
-  padding: 0 16px;
-  border-radius: 12px;
-  font-size: 16px;
+  padding: 18px 20px;
+  font-size: 17px;
   font-weight: 500;
 `;
-const Grid = styled.View`
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 8px;
+const Divider = styled.View`
+  height: 0.5px;
+  margin-left: 20px;
+  opacity: 0.25;
 `;
 const Chip = styled.View`
-  height: 36px;
+  height: 34px;
   padding: 0 14px;
   align-items: center;
   justify-content: center;
-  border-radius: 18px;
+  border-radius: 17px;
+`;
+const QuickChip = styled.View`
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
 `;
 const ChipText = styled.Text`
   font-size: 14px;
   font-weight: 600;
 `;
 const DoneBtn = styled.View`
-  height: 64px;
+  height: 56px;
   align-items: center;
   justify-content: center;
-  border-radius: 32px;
+  border-radius: 28px;
 `;
 const DoneText = styled.Text`
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
 `;
