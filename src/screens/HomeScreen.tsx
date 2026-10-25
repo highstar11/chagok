@@ -106,10 +106,14 @@ export function HomeScreen() {
   return (
     <>
       <Animated.ScrollView
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-          useNativeDriver: true,
-          listener: (e: any) => setFabCollapsed(e.nativeEvent.contentOffset.y > 24),
-        })}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          {
+            useNativeDriver: true,
+            listener: (e: any) =>
+              setFabCollapsed(e.nativeEvent.contentOffset.y > 24),
+          },
+        )}
         scrollEventThrottle={16}
         contentContainerStyle={{
           flexGrow: 1,
@@ -121,7 +125,11 @@ export function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {error && (
-          <Pressable onPress={reload} accessibilityRole="button" accessibilityLabel="다시 불러오기">
+          <Pressable
+            onPress={reload}
+            accessibilityRole="button"
+            accessibilityLabel="다시 불러오기"
+          >
             <ErrorBar>
               <ErrorText>서버에 연결하지 못했어요 · 눌러서 다시 시도</ErrorText>
             </ErrorBar>
@@ -129,7 +137,10 @@ export function HomeScreen() {
         )}
 
         {/* 1) 이번 기간에 쓴 돈 + 목표 예산까지 남은 돈 */}
-        <GlassView radius={36} style={{ paddingHorizontal: 24, paddingTop: 26, paddingBottom: 24 }}>
+        <GlassView
+          radius={36}
+          style={{ paddingHorizontal: 24, paddingTop: 26, paddingBottom: 24 }}
+        >
           <HeroTop>
             <Caption>사용한 금액</Caption>
             <RangeText>
@@ -137,20 +148,33 @@ export function HomeScreen() {
             </RangeText>
           </HeroTop>
 
-          <Hero adjustsFontSizeToFit numberOfLines={1} style={{ opacity: loading ? 0.35 : 1 }}>
+          <Hero
+            adjustsFontSizeToFit
+            numberOfLines={1}
+            style={{ opacity: loading ? 0.35 : 1 }}
+          >
             {won(totalSpent)}
           </Hero>
 
           <Track style={{ marginTop: 20 }}>
-            <Fill style={{ width: `${Math.min(1, Math.max(0, usedRatio)) * 100}%`, backgroundColor: tier.color }} />
+            <Fill
+              style={{
+                width: `${Math.min(1, Math.max(0, usedRatio)) * 100}%`,
+                backgroundColor: tier.color,
+              }}
+            />
           </Track>
           <BarCaption>
             <BarLeft>
               목표까지{' '}
-              <BarStrong style={{ color: tier.color }}>{won(Math.abs(remaining))}</BarStrong>{' '}
+              <BarStrong style={{ color: tier.color }}>
+                {won(Math.abs(remaining))}
+              </BarStrong>{' '}
               {remaining < 0 ? '초과' : '남음'}
             </BarLeft>
-            <BarRight>{Math.round(Math.max(0, usedRatio) * 100)}% 사용</BarRight>
+            <BarRight>
+              {Math.round(Math.max(0, usedRatio) * 100)}% 사용
+            </BarRight>
           </BarCaption>
 
           <Divider />
@@ -165,17 +189,27 @@ export function HomeScreen() {
         {/* 2) 고른 날의 지출 */}
         <GlassView radius={32} style={{ padding: 24, marginTop: 20 }}>
           <TodayLabel>
-            {isToday ? '오늘' : `${viewDate.getMonth() + 1}월 ${viewDate.getDate()}일`} 사용한 금액
+            {isToday
+              ? '오늘'
+              : `${viewDate.getMonth() + 1}월 ${viewDate.getDate()}일`}{' '}
+            사용한 금액
           </TodayLabel>
-          <TodayValue style={{ opacity: loading ? 0.35 : 1 }}>{won(dayTotal)}</TodayValue>
+          <TodayValue style={{ opacity: loading ? 0.35 : 1 }}>
+            {won(dayTotal)}
+          </TodayValue>
 
           {dayItems.length > 0 ? (
             <ItemList>
-              {dayItems.map((e) => {
+              {dayItems.map(e => {
                 const c = categoryOf(e.category);
                 return (
                   <Item key={e.id}>
-                    <Dot style={{ backgroundColor: category[c.key as CategoryKey], marginRight: 10 }} />
+                    <Dot
+                      style={{
+                        backgroundColor: category[c.key as CategoryKey],
+                        marginRight: 10,
+                      }}
+                    />
                     <ItemName numberOfLines={1}>{e.name || c.name}</ItemName>
                     <ItemAmount>{won(e.amount)}</ItemAmount>
                   </Item>
@@ -191,7 +225,7 @@ export function HomeScreen() {
       {/* 스크롤 시 블러로 사라지는 고정 헤더 — 날짜를 눌러 바꾼다 */}
       <BlurHeader scrollY={scrollY}>
         <Header>
-          <GlassView radius={32}>
+          <GlassView interactive radius={32}>
             <Pressable
               onPress={() => stepDay(-1)}
               hitSlop={8}
@@ -202,23 +236,33 @@ export function HomeScreen() {
               <Chevron dir="left" size={20} color={colors.text} />
             </Pressable>
           </GlassView>
-          <GlassView radius={32} style={{ padding: 14 }}>
+          <GlassView interactive radius={32} style={{ padding: 14 }}>
             <Pressable
               onPress={() => setSheetOpen(true)}
-              hitSlop={6}
+              hitSlop={12}
               accessibilityRole="button"
-              accessibilityLabel={`${viewDate.getMonth() + 1}월 ${viewDate.getDate()}일 ${WEEKDAYS[viewDate.getDay()]}요일, 날짜 선택`}
+              accessibilityLabel={`${
+                viewDate.getMonth() + 1
+              }월 ${viewDate.getDate()}일 ${
+                WEEKDAYS[viewDate.getDay()]
+              }요일, 날짜 선택`}
               style={({ pressed }) => ({ opacity: pressed ? 0.55 : 1 })}
             >
               <DateButton>
                 <MonthText>
-                  {viewDate.getMonth() + 1}월 {viewDate.getDate()}일 {WEEKDAYS[viewDate.getDay()]}요일
+                  {viewDate.getMonth() + 1}월 {viewDate.getDate()}일{' '}
+                  {WEEKDAYS[viewDate.getDay()]}요일
                 </MonthText>
-                <Chevron dir="down" size={16} color={colors.subText} strokeWidth={2.8} />
+                <Chevron
+                  dir="down"
+                  size={16}
+                  color={colors.subText}
+                  strokeWidth={2.8}
+                />
               </DateButton>
             </Pressable>
           </GlassView>
-          <GlassView radius={32}>
+          <GlassView interactive radius={32}>
             <Pressable
               onPress={() => stepDay(1)}
               disabled={isToday}
@@ -233,7 +277,11 @@ export function HomeScreen() {
         </Header>
       </BlurHeader>
 
-      <AddFab collapsed={fabCollapsed} onPress={openAdd} bottom={insets.bottom + FAB_BOTTOM} />
+      <AddFab
+        collapsed={fabCollapsed}
+        onPress={openAdd}
+        bottom={insets.bottom + FAB_BOTTOM}
+      />
 
       <DateSheet
         visible={sheetOpen}
