@@ -9,6 +9,7 @@ import {
   ScrollView,
   TextInput,
   View,
+  Alert
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -19,6 +20,8 @@ import type { RootStackParamList } from '../navigation/types';
 import { CATEGORIES, suggestCategory } from '../data/category';
 import type { CategoryId } from '../data/category';
 import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
+import { addExpense } from '../data/expenses';
+import { Loading } from '../components/Loading';
 
 const MAX_AMOUNT = 99_999_999;
 const SIDE = 24;
@@ -48,6 +51,7 @@ export function AddExpenseScreen() {
   const [category, setCategory] = useState<CategoryId | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [nameFocused, setNameFocused] = useState(false);
+  const [saving, setSaving] = useState(false);
 
 const amountRef = useRef<React.ComponentRef<typeof TextInput>>(null);  const shake = useRef(new Animated.Value(0)).current;
   const manualCategory = useRef(false); // 직접 고른 카테고리는 자동 추천이 덮어쓰지 않는다
@@ -107,15 +111,27 @@ const amountRef = useRef<React.ComponentRef<typeof TextInput>>(null);  const sha
     setCategory(id);
   };
 
-  const save = () => {
-    if (amount <= 0) return;
-    // TODO: SQLite 저장 ({ date: params.date, amount, name: name.trim(), category: category ?? 'etc' })
-    navigation.goBack();
-  };
+    const save = async () => {
+      if (amount <= 0 || saving) return;
+      Keyboard.dismiss();
+      setSaving(true);
+      try {
+        await addExpense({
+          date: new Date(params.date),
+          amount,
+          name: name.trim(),
+          category: category ?? 'etc',
+        });
+        navigation.goBack();
+      } catch (e: any) {
+        console.warn('addExpense failed', e);
+        setSaving(false);
+        Alert.alert('저장하지 못했어요', e?.message ?? '알 수 없는 오류');
+      }
+    };
 
-  const canSave = amount > 0;
-  const hint = amount >= 10000 ? readable(amount) : ' ';
 
+const canSave = amount > 0 && !saving;
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Container
@@ -265,6 +281,7 @@ const amountRef = useRef<React.ComponentRef<typeof TextInput>>(null);  const sha
           </DoneBtn>
         </Pressable>
       </Container>
+      <Loading visible={saving} />
     </KeyboardAvoidingView>
   );
 }

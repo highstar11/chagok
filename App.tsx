@@ -6,6 +6,7 @@ import { ThemeProvider } from 'styled-components/native';
 import { theme } from './src/theme/theme';
 import { SettingsProvider } from './src/settings/SettingsContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { AuthProvider } from './src/lib/Auth';
 
 const navTheme = {
   ...NavDefaultTheme,
@@ -18,11 +19,13 @@ export default function App() {
       <ThemeProvider theme={theme}>
         <SettingsProvider>
           <StatusBar barStyle="dark-content" />
+          <AuthProvider>
           <View style={styles.root}>
-            <NavigationContainer theme={navTheme}>
-              <RootNavigator />
-            </NavigationContainer>
+              <NavigationContainer theme={navTheme}>
+                <RootNavigator />
+              </NavigationContainer>
           </View>
+          </AuthProvider>
         </SettingsProvider>
       </ThemeProvider>
     </SafeAreaProvider>
